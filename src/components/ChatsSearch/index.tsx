@@ -1,10 +1,17 @@
 "use client";
-import { db } from "@/firebase-config";
+import { auth, db } from "@/firebase-config";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { collection, getDocs } from "firebase/firestore";
+import {
+  arrayUnion,
+  collection,
+  doc,
+  getDocs,
+  updateDoc,
+} from "firebase/firestore";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 type ChatsSearchProps = {
   filter: number;
@@ -15,10 +22,11 @@ export type SearchedUsersProps = {
   name: string;
   profileImage: string;
   email: string;
-  chats: [];
+  chats?: [];
 };
 
 export default function ChatsSearch({ filter, select }: ChatsSearchProps) {
+  const [user] = useAuthState(auth);
   const [searchedText, setSearchedText] = useState<string>("");
   const [searchedUsers, setSearchedUsers] = useState<SearchedUsersProps[]>([]);
   useEffect(() => {
@@ -29,7 +37,7 @@ export default function ChatsSearch({ filter, select }: ChatsSearchProps) {
           const newData = querySnapshot.docs;
           if (filter == 0) {
             const nameUsers = newData.filter((doc) =>
-              doc.data().name.toLowerCase().includes(searchedText)
+              doc.data().name.toLowerCase().includes(searchedText.toLowerCase())
             );
             nameUsers.map((doc) =>
               setSearchedUsers((prev: any) => [
@@ -62,6 +70,25 @@ export default function ChatsSearch({ filter, select }: ChatsSearchProps) {
     setSearchedText(e.target.value);
   };
 
+  const addUserOnClickHandler = async (addedUser: SearchedUsersProps) => {
+    if (user?.email) {
+      const usersRef = await getDocs(collection(db, "users"));
+
+      const clickedUserDocData = usersRef.docs.find(
+        (doc) => doc.id === addedUser.email
+      );
+
+      const currentUserRef = doc(db, "users", user?.email);
+      await updateDoc(currentUserRef, {
+        chats: arrayUnion({
+          email: clickedUserDocData?.id,
+          name: clickedUserDocData?.data().name,
+          profileImage: clickedUserDocData?.data().profileImage,
+        }),
+      });
+    }
+  };
+
   return (
     <div className="flex items-center justify-between dark:bg-white/5 bg-black/5 px-4 py-1 rounded relative z-50">
       <div className="pr-4 h-full w-full">
@@ -88,6 +115,7 @@ export default function ChatsSearch({ filter, select }: ChatsSearchProps) {
                 select(user);
                 setSearchedUsers([]);
                 setSearchedText("");
+                addUserOnClickHandler(user);
               }}
             >
               <div className="w-8 h-8 aspect-square rounded-full relative">
