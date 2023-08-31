@@ -68,15 +68,6 @@ export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
         });
         setMessages(chatData);
       });
-      // setMessages((prev) => [
-      //   {
-      //     id: Math.random().toString(),
-      //     message: messageText,
-      //     sender: user.displayName,
-      //     time: new Date().toString(),
-      //   },
-      //   ...prev,
-      // ]);
       setMessageText("");
     }
   };
@@ -120,7 +111,6 @@ export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
             });
           });
 
-          // Set the 'latestMessages' array to the state using setMessages([])
           setMessages(latestMessages);
         })
         .catch((error) => {
@@ -130,7 +120,7 @@ export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
   }, [chatId]);
 
   return (
-    <div className="col-span-2 flex flex-col justify-between h-full dark:bg-white/5 bg-white rounded-lg">
+    <div className="md:col-span-2 col-span-3 flex flex-col justify-between h-full dark:bg-white/5 bg-white rounded-lg">
       <div className="flex items-center py-2.5 px-4 border-b dark:border-white/10 border-black/5">
         <div className="w-10 h-10 aspect-square rounded-full relative">
           {userChat?.profileImage && (
@@ -149,37 +139,46 @@ export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
       </div>
       <div className="w-full overflow-y-scroll h-[65vh] flex flex-col-reverse gap-y-2 p-2">
         {messages &&
-          messages.map((message, index) => (
-            <div
-              key={message.id}
-              className="flex gap-x-2 items-Start"
-              dir={message.sender === user?.displayName ? "rtl" : "ltr"}
-            >
-              <div className="w-9 h-9 aspect-square rounded-full relative">
-                <Image
-                  src={
-                    (message.sender === user?.displayName
-                      ? user?.photoURL?.toString()
-                      : userChat?.profileImage.toString()) || ""
-                  }
-                  alt=" "
-                  height={100}
-                  width={100}
-                  className="absolute w-full h-full object-cover object-center rounded-full"
-                />
-              </div>
+          messages.map((message, index) => {
+            const previousMessage = messages[index + 1];
+            const hideImage =
+              previousMessage && previousMessage.sender === message.sender;
+
+            return (
               <div
-                className={`max-w-[350px] text-end ${
-                  message.sender === user?.displayName
-                    ? "bg-third-color"
-                    : "bg-neutral-300"
-                } p-3 rounded-lg`}
+                key={message.id}
+                className="flex gap-x-2 items-start"
+                dir={message.sender === user?.displayName ? "rtl" : "ltr"}
               >
-                {message.message}
+                <div className="w-9 h-9 aspect-square rounded-full relative">
+                  {!hideImage && (
+                    <Image
+                      src={
+                        (message.sender === user?.displayName
+                          ? user?.photoURL?.toString()
+                          : userChat?.profileImage.toString()) || ""
+                      }
+                      alt=" "
+                      height={100}
+                      width={100}
+                      className="absolute w-full h-full object-cover object-center rounded-full"
+                    />
+                  )}
+                </div>
+                <div
+                  className={`max-w-[350px] text-end ${
+                    message.sender === user?.displayName
+                      ? "dark:bg-third-color dark:text-black text-white bg-secondary-dark"
+                      : "bg-neutral-300"
+                  } p-3 rounded-lg`}
+                >
+                  {message.message}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
       </div>
+
       <div className="flex items-center border-t dark:border-white/10 border-black/20 text-white justify-between">
         <div className="px-4 h-full w-full">
           <input

@@ -88,14 +88,14 @@ export const Chats = ({ user, select }: ChatProps) => {
       {chats.map((chat) => (
         <div
           key={chat.email}
-          className={`flex gap-x-2 items-center hover:bg-white/5 cursor-pointer p-1 rounded select-none
+          className={`whitespace-nowrap flex gap-x-2 items-center hover:bg-white/5 cursor-pointer p-1 rounded select-none
           ${selected == chat.name ? "bg-white/5" : ""}`}
           onClick={() => {
             select(chat);
             setSelected(chat.name);
           }}
         >
-          <div className="w-10 h-10 rounded-full relative">
+          <div className="w-10 h-10 rounded-full relative flex-shrink-0">
             <Image
               src={chat.profileImage}
               alt=" "

@@ -14,6 +14,7 @@ const Home = () => {
   const [filter, setFilter] = useState(0);
   const [userChat, setUserChat] = useState<SearchedUsersProps>();
   const [currentChatId, setCurrentChatId] = useState("");
+  const [toggleSideBar, setToggleSideBar] = useState(false);
 
   useEffect(() => {
     if (user && user.email && userChat) {
@@ -53,9 +54,13 @@ const Home = () => {
 
   return (
     <div className="w-full min-h-screen h-full ">
-      <NavBar />
+      <NavBar setToggleSideBar={setToggleSideBar} user={user} />
       <div className="w-full h-full min-h-screen grid grid-cols-3 pt-16 pb-8 px-8 gap-x-8">
-        <div className="col-span-1 h-full dark:bg-white/5 bg-white rounded-lg">
+        <div
+          className={`md:col-span-1 h-full md:dark:bg-white/5 dark:bg-black md:bg-white bg-secondary-light rounded-lg
+          md:static fixed z-50 ${toggleSideBar? "w-full md:ml-0 -ml-4" : "md:w-full w-0"} transition-all duration-500 ease-out overflow-hidden 
+          `}
+        >
           <div className="dark:text-white/90 text-black/90 font-semibold p-4 border-b dark:border-white/10 border-black/5 text-lg">
             Chats
           </div>

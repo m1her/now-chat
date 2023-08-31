@@ -36,7 +36,7 @@ const Login = () => {
 
   return (
     <div className="w-full min-h-screen h-full flex justify-center items-center">
-      <div className="p-8 min-w-[500px] border border-black/20 shadow-lg bg-white dark:bg-white/5 rounded-lg flex flex-col items-center">
+      <div className="p-8 md:min-w-[500px] border border-black/20 shadow-lg bg-white dark:bg-white/5 rounded-lg flex flex-col items-center">
         <div className="dark:text-primary-light text-secondary-dark text-4xl font-bold">
           Now Chat
         </div>
