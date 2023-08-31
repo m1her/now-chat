@@ -13,7 +13,7 @@ type CatagoryProps = {
 export default function Filters({ filter }: CatagoryProps) {
   const [selected, setSelected] = useState("Name");
   return (
-    <div className="w-full flex justify-start gap-x-1 overflow-x-scroll flex-shrink-0">
+    <div className="w-full flex justify-start gap-x-1 flex-shrink-0 scroll">
       {filters.map((item) => (
         <div
           key={item.name}

@@ -10,6 +10,7 @@ import {
   doc,
   getDocs,
   limit,
+  onSnapshot,
   orderBy,
   query,
   setDoc,
@@ -49,15 +50,33 @@ export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
         sender: user.displayName,
         time: new Date().toString(),
       });
-      setMessages((prev) => [
-        {
-          id: Math.random().toString(),
-          message: messageText,
-          sender: user.displayName,
-          time: new Date().toString(),
-        },
-        ...prev,
-      ]);
+      const messagesQuery = query(
+        messagesCollectionRef,
+        orderBy("time", "desc"),
+        limit(10)
+      );
+
+      onSnapshot(messagesQuery, (querySnapshot) => {
+        const chatData: any[] = [];
+        querySnapshot.forEach((doc) => {
+          chatData.push({
+            id: doc.id,
+            message: doc.data().message,
+            sender: doc.data().sender,
+            time: doc.data().time,
+          });
+        });
+        setMessages(chatData);
+      });
+      // setMessages((prev) => [
+      //   {
+      //     id: Math.random().toString(),
+      //     message: messageText,
+      //     sender: user.displayName,
+      //     time: new Date().toString(),
+      //   },
+      //   ...prev,
+      // ]);
       setMessageText("");
     }
   };
@@ -130,7 +149,7 @@ export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
       </div>
       <div className="w-full overflow-y-scroll h-[65vh] flex flex-col-reverse gap-y-2 p-2">
         {messages &&
-          messages.map((message) => (
+          messages.map((message, index) => (
             <div
               key={message.id}
               className="flex gap-x-2 items-Start"

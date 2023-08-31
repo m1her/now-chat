@@ -1,17 +1,34 @@
 "use client";
 import { db } from "@/firebase-config";
 import { User } from "firebase/auth";
-import firebase from 'firebase/app';
-import 'firebase/firestore';
-import { collection, doc, getDoc } from "firebase/firestore";
+import firebase from "firebase/app";
+import "firebase/firestore";
+import {
+  DocumentData,
+  QuerySnapshot,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+} from "firebase/firestore";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
+import { unsubscribe } from "diagnostics_channel";
 
 type ChatProps = {
   user: User | null | undefined;
   select: any;
 };
-type ChatState = { email: string; name: string; profileImage: string }[];
+type ChatState = {
+  email: string;
+  name: string;
+  profileImage: string;
+  lastUpdated: string;
+}[];
 
 export const Chats = ({ user, select }: ChatProps) => {
   const [chats, setChats] = useState<ChatState>([]);
@@ -19,31 +36,58 @@ export const Chats = ({ user, select }: ChatProps) => {
   const [selected, setSelected] = useState<string>("");
   useEffect(() => {
     if (user && user.email) {
-      getDoc(doc(db, "users", user.email)).then((doc) => {
-        setChats(doc?.data()?.chats);
-        console.log(doc?.data()?.chats);
+      const currentUserRef = doc(db, "users", user.email);
+      const chatsCollectionRef = collection(currentUserRef, "chats");
+      const chatsQuery = query(
+        chatsCollectionRef,
+        orderBy("lastUpdated", "desc")
+      );
+
+      getDocs(chatsQuery)
+        .then((querySnapshot) => {
+          const chatData: any[] = [];
+          querySnapshot.forEach((doc) => {
+            chatData.push(doc.data());
+          });
+          setChats(chatData);
+          console.log(chatData);
+        })
+        .catch((error) => {
+          console.error("Error fetching chat data:", error);
+        });
+    }
+  }, [user, db]);
+
+  useEffect(() => {
+    if (user && user.email) {
+      const docRef = doc(collection(db, "/users/"));
+      const messagesCollectionRef = collection(
+        db,
+        "/users/",
+        user.email,
+        "chats"
+      );
+
+      const messagesQuery = query(
+        messagesCollectionRef,
+        orderBy("lastUpdated", "desc")
+      );
+
+      onSnapshot(messagesQuery, (querySnapshot) => {
+        const chatData: any[] = [];
+        querySnapshot.forEach((doc) => {
+          chatData.push(doc.data());
+        });
+        setChats(chatData);
       });
     }
   }, [user]);
 
-  useEffect(() => {
-    const usersCollection = collection(db, "users");
-    const unsubscribe = firebase.firestore().collection(db, 'users')
-      .onSnapshot((snapshot) => {
-        const updatedData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setData(updatedData);
-      });
-
-    return () => unsubscribe();
-  }, []);
-
   return (
     <div>
       {chats.map((chat) => (
-        <div key={chat.email}
+        <div
+          key={chat.email}
           className={`flex gap-x-2 items-center hover:bg-white/5 cursor-pointer p-1 rounded select-none
           ${selected == chat.name ? "bg-white/5" : ""}`}
           onClick={() => {
@@ -68,4 +112,3 @@ export const Chats = ({ user, select }: ChatProps) => {
     </div>
   );
 };
-

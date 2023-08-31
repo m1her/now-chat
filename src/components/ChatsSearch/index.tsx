@@ -3,10 +3,12 @@ import { auth, db } from "@/firebase-config";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  addDoc,
   arrayUnion,
   collection,
   doc,
   getDocs,
+  setDoc,
   updateDoc,
 } from "firebase/firestore";
 import Image from "next/image";
@@ -73,19 +75,21 @@ export default function ChatsSearch({ filter, select }: ChatsSearchProps) {
   const addUserOnClickHandler = async (addedUser: SearchedUsersProps) => {
     if (user?.email) {
       const usersRef = await getDocs(collection(db, "users"));
-
       const clickedUserDocData = usersRef.docs.find(
         (doc) => doc.id === addedUser.email
       );
+      const currentUserRef = doc(
+        collection(db, "users", user?.email, "chats"),
+        addedUser.email.toString()
+      );
 
-      const currentUserRef = doc(db, "users", user?.email);
-      await updateDoc(currentUserRef, {
-        chats: arrayUnion({
-          email: clickedUserDocData?.id,
-          name: clickedUserDocData?.data().name,
-          profileImage: clickedUserDocData?.data().profileImage,
-        }),
-      });
+      const chatData = {
+        email: clickedUserDocData?.id,
+        name: clickedUserDocData?.data().name,
+        profileImage: clickedUserDocData?.data().profileImage,
+        lastUpdated: new Date().toString(),
+      };
+      setDoc(currentUserRef, chatData);
     }
   };
 
