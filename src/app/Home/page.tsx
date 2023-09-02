@@ -65,7 +65,7 @@ const Home = () => {
             Chats
           </div>
           <div className="text-sm mt-2 ml-4 flex items-center justify-start w-full gap-x-2 whitespace-nowrap dark:text-white text-black">
-            Filter by:
+            Search by:
             <Filters filter={setFilter} />
           </div>
           <div className="px-8 mt-2 mb-4 z-50 flex">

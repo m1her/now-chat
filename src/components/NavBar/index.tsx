@@ -17,7 +17,7 @@ export const NavBar = ({ setToggleSideBar, user }: NavBarProps) => {
     router.push("/");
   };
   return (
-    <div className="fixed top-0 left-0 w-full flex items-center justify-between px-8 py-4 select-none">
+    <div className="fixed top-0 left-0 w-full flex items-center justify-between px-8 py-2 select-none">
       <div className="flex gap-x-2 items-center">
         <FontAwesomeIcon
           icon={faBars}
@@ -28,8 +28,8 @@ export const NavBar = ({ setToggleSideBar, user }: NavBarProps) => {
           Now Chat
         </div>
       </div>
-      <div className="flex gap-x-2">
-        <div className="flex text-xs gap-x-2 items-center py-2.5 px-4 border-b dark:border-white/10 border-black/5">
+      <div className="flex items-center gap-x-2">
+        <div className="flex text-xs gap-x-2 items-center py-2.5 px-4 ">
           <div className="dark:text-white/90 text-black/90 font-semibold">
             {user?.displayName}
           </div>
@@ -44,7 +44,7 @@ export const NavBar = ({ setToggleSideBar, user }: NavBarProps) => {
           </div>
         </div>
         <div
-          className="dark:text-third-color text-secondary-dark font-semibold flex flex-shrink-0 items-center gap-x-2
+          className="h-fit dark:text-third-color text-secondary-dark font-semibold flex flex-shrink-0 items-center gap-x-2
         cursor-pointer hover:dark:bg-[#fca311]/20 hover:bg-[#14213d]/20 rounded px-2 py-1 transition-all duration-300
         "
         >
