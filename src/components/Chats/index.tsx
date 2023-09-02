@@ -14,10 +14,13 @@ import {
   onSnapshot,
   orderBy,
   query,
+  updateDoc,
 } from "firebase/firestore";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { unsubscribe } from "diagnostics_channel";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faExclamation } from "@fortawesome/free-solid-svg-icons";
 
 type ChatProps = {
   user: User | null | undefined;
@@ -28,6 +31,7 @@ type ChatState = {
   name: string;
   profileImage: string;
   lastUpdated: string;
+  seen: boolean;
 }[];
 
 export const Chats = ({ user, select }: ChatProps) => {
@@ -83,32 +87,53 @@ export const Chats = ({ user, select }: ChatProps) => {
     }
   }, [user]);
 
+  const seeChat = (chatId: string | undefined) => {
+    if (user && user.email) {
+      const chatRef = doc(
+        collection(db, "/users/", user?.email, "chats"),
+        chatId
+      );
+      updateDoc(chatRef, { seen: true });
+    }
+  };
+
   return (
     <div>
       {chats.map((chat) => (
         <div
           key={chat.email}
-          className={`whitespace-nowrap flex gap-x-2 items-center hover:bg-white/5 cursor-pointer p-1 rounded select-none
+          className={`whitespace-nowrap flex justify-between items-center dark:hover:bg-white/5 hover:bg-black/5 transition-all duration-300 cursor-pointer p-1 rounded select-none
           ${selected == chat.name ? "bg-white/5" : ""}`}
           onClick={() => {
             select(chat);
             setSelected(chat.name);
+            seeChat(chat.email);
           }}
         >
-          <div className="w-10 h-10 rounded-full relative flex-shrink-0">
-            <Image
-              src={chat.profileImage}
-              alt=" "
-              height={100}
-              width={100}
-              className="absolute w-full h-full object-cover object-center rounded-full"
-            />
+          <div className="flex items-center gap-x-2">
+            <div className="w-10 h-10 rounded-full relative flex-shrink-0">
+              <Image
+                src={chat.profileImage}
+                alt=" "
+                height={100}
+                width={100}
+                className="absolute w-full h-full object-cover object-center rounded-full"
+              />
+            </div>
+            <div className="dark:text-white text-black font-medium">
+              {chat.name}
+            </div>
           </div>
-          <div className="dark:text-white text-black font-medium">
-            {chat.name}
-          </div>
+          {!chat.seen && (
+            <div className="w-4 h-4 bg-third-color rounded-full flex items-center justify-center">
+              <FontAwesomeIcon
+                icon={faExclamation}
+                className=" w-3 h-3 text-black"
+              />
+            </div>
+          )}
         </div>
       ))}
-    </div>
+    </div> 
   );
 };

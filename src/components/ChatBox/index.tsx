@@ -14,9 +14,13 @@ import {
   orderBy,
   query,
   setDoc,
+  startAfter,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "@/firebase-config";
 import { User } from "firebase/auth";
+import InfiniteScroll from "react-infinite-scroll-component";
+import { Spinner } from "../Spinner";
 
 type ChatBoxProps = {
   userChat: SearchedUsersProps;
@@ -26,6 +30,8 @@ type ChatBoxProps = {
 
 export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
   const [messageText, setMessageText] = useState("");
+  const [lastStanpshot, setLastStanpshot] = useState<any>();
+  const [hasMore, setHasMore] = useState<boolean>(true);
   const [messages, setMessages] = useState<
     {
       id: string;
@@ -42,13 +48,13 @@ export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
   };
 
   const sendHandler = () => {
-    if (user) {
+    if (user && messageText != "" && messageText) {
       const docRef = doc(collection(db, "/chats/"), chatId);
       const messagesCollectionRef = collection(docRef, "messages");
       addDoc(messagesCollectionRef, {
         message: messageText,
         sender: user.displayName,
-        time: new Date().toString(),
+        time: new Date(),
       });
       const messagesQuery = query(
         messagesCollectionRef,
@@ -68,6 +74,13 @@ export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
         });
         setMessages(chatData);
       });
+
+      const notifyUserRef = doc(
+        collection(db, "/users/", userChat.email, "chats"),
+        user.email?.toString()
+      );
+      updateDoc(notifyUserRef, { seen: false });
+
       setMessageText("");
     }
   };
@@ -102,6 +115,7 @@ export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
 
       getDocs(messagesQuery)
         .then((querySnapshot) => {
+          const first = querySnapshot;
           querySnapshot.forEach((doc) => {
             latestMessages.push({
               id: doc.id,
@@ -110,14 +124,67 @@ export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
               time: doc.data().time,
             });
           });
-
-          setMessages(latestMessages);
+          if (first.empty) {
+            setHasMore(false);
+          } else {
+            setHasMore(true);
+            setMessages(latestMessages);
+            const lastVisible = first.docs[first.docs.length - 1];
+            setLastStanpshot(lastVisible);
+          }
         })
         .catch((error) => {
+          setHasMore(false);
           console.error("Error getting documents:", error);
         });
     }
   }, [chatId]);
+
+  const loadNextMessages = () => {
+    console.log("haai");
+    const docRef = doc(collection(db, "/chats/"), chatId);
+    const messagesCollectionRef = collection(docRef, "messages");
+
+    const next = query(
+      messagesCollectionRef,
+      orderBy("time", "desc"),
+      startAfter(lastStanpshot),
+      limit(10)
+    );
+
+    const latestMessages: React.SetStateAction<
+      {
+        id: string;
+        message: string;
+        sender: string;
+        time: string;
+      }[]
+    > = [];
+    getDocs(next)
+      .then((querySnapshot) => {
+        const next = querySnapshot;
+        querySnapshot.forEach((doc) => {
+          latestMessages.push({
+            id: doc.id,
+            message: doc.data().message,
+            sender: doc.data().sender,
+            time: doc.data().time,
+          });
+        });
+        if (next.empty) {
+          setHasMore(false);
+        } else {
+          setHasMore(true);
+          setMessages((prev) => [...prev, ...latestMessages]);
+          const lastVisible = next.docs[next.docs.length - 1];
+          setLastStanpshot(lastVisible);
+        }
+      })
+      .catch((error) => {
+        setHasMore(false);
+        console.error("Error getting documents:", error);
+      });
+  };
 
   return (
     <div className="md:col-span-2 col-span-3 flex flex-col justify-between h-full dark:bg-white/5 bg-white rounded-lg">
@@ -137,46 +204,68 @@ export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
           {userChat?.name}
         </div>
       </div>
-      <div className="w-full overflow-y-scroll h-[65vh] flex flex-col-reverse gap-y-2 p-2">
-        {messages &&
-          messages.map((message, index) => {
-            const previousMessage = messages[index + 1];
-            const hideImage =
-              previousMessage && previousMessage.sender === message.sender;
+      <div
+        className="w-full overflow-y-scroll h-[65vh] flex flex-col-reverse gap-y-2 p-2"
+        id="scrollableDiv"
+      >
+        <InfiniteScroll
+          next={loadNextMessages}
+          hasMore={hasMore}
+          loader={
+            <div className="w-full flex justify-center">
+              <Spinner />
+            </div>
+          }
+          dataLength={messages.length}
+          style={{
+            display: "flex",
+            flexDirection: "column-reverse",
+            rowGap: "0.5rem",
+            overflow: "hidden",
+          }}
+          inverse={true}
+          scrollableTarget="scrollableDiv"
+        >
+          {messages &&
+            messages.map((message, index) => {
+              const previousMessage = messages[index + 1];
+              const hideImage =
+                previousMessage && previousMessage.sender === message.sender;
 
-            return (
-              <div
-                key={message.id}
-                className="flex gap-x-2 items-start"
-                dir={message.sender === user?.displayName ? "rtl" : "ltr"}
-              >
-                <div className="w-9 h-9 aspect-square rounded-full relative">
-                  {!hideImage && (
-                    <Image
-                      src={
-                        (message.sender === user?.displayName
-                          ? user?.photoURL?.toString()
-                          : userChat?.profileImage.toString()) || ""
-                      }
-                      alt=" "
-                      height={100}
-                      width={100}
-                      className="absolute w-full h-full object-cover object-center rounded-full"
-                    />
-                  )}
-                </div>
+              return (
                 <div
-                  className={`max-w-[350px] text-end ${
-                    message.sender === user?.displayName
-                      ? "dark:bg-third-color dark:text-black text-white bg-secondary-dark"
-                      : "bg-neutral-300"
-                  } p-3 rounded-lg`}
+                  key={message.id}
+                  className="flex gap-x-2 items-start"
+                  dir={message.sender === user?.displayName ? "rtl" : "ltr"}
                 >
-                  {message.message}
+                  <div className="w-9 h-9 aspect-square rounded-full relative">
+                    {!hideImage && (
+                      <Image
+                        src={
+                          (message.sender === user?.displayName
+                            ? user?.photoURL?.toString()
+                            : userChat?.profileImage.toString()) || ""
+                        }
+                        alt=" "
+                        height={100}
+                        width={100}
+                        className="absolute w-full h-full object-cover object-center rounded-full"
+                      />
+                    )}
+                  </div>
+                  <div
+                    className={`max-w-[350px] text-end ${
+                      message.sender === user?.displayName
+                        ? "dark:bg-third-color dark:text-black text-white bg-secondary-dark"
+                        : "bg-neutral-300"
+                    } p-3 rounded-lg`}
+                  >
+                    {message.message}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+        </InfiniteScroll>
       </div>
 
       <div className="flex items-center border-t dark:border-white/10 border-black/20 text-white justify-between">
