@@ -98,7 +98,7 @@ export const Chats = ({ user, select }: ChatProps) => {
   };
 
   return (
-    <div className="h-full flex flex-col gap-y-2 overflow-y-scroll">
+    <div className="h-full flex flex-col gap-y-2 overflow-y-scroll overflow-x-hidden">
       {chats.map((chat) => (
         <div
           key={chat.email}

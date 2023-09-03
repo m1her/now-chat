@@ -55,15 +55,16 @@ const Home = () => {
   return (
     <div className="w-full min-h-screen h-full ">
       <NavBar setToggleSideBar={setToggleSideBar} user={user} />
-      <div className="w-full h-full min-h-screen grid grid-cols-3 pt-16 pb-8 px-8 gap-x-8">
+      <div className="w-full h-full min-h-screen grid grid-cols-3 pt-16 pb-8 md:px-8 px-4 gap-x-8">
         <div
           className={`md:col-span-1 h-full md:dark:bg-white/5 dark:bg-black md:bg-white bg-secondary-light rounded-lg
-          md:static fixed z-50 ${toggleSideBar? "w-full md:ml-0 -ml-4" : "md:w-full w-0"} transition-all duration-500 ease-out overflow-hidden 
+          md:static fixed z-50 ${toggleSideBar? "w-full md:ml-0 -ml-0" : "md:w-full w-0"} transition-all duration-500 ease-out overflow-hidden 
           `}
         >
-          <div className="dark:text-white/90 text-black/90 font-semibold p-4 border-b dark:border-white/10 border-black/5 text-lg">
+          <div className="dark:text-white/90 text-black/90 font-semibold p-4 text-lg">
             Chats
           </div>
+          <hr className="border-b dark:border-white/10 border-black/5 md:mr-0 mr-8" />
           <div className="text-sm mt-2 ml-4 flex items-center justify-start w-full gap-x-2 whitespace-nowrap dark:text-white text-black">
             Search by:
             <Filters filter={setFilter} />

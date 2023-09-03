@@ -31,6 +31,7 @@ type ChatBoxProps = {
 export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
   const [messageText, setMessageText] = useState("");
   const [lastStanpshot, setLastStanpshot] = useState<any>();
+  const [firstStanpshot, setFirstStanpshot] = useState<any>();
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [messages, setMessages] = useState<
     {
@@ -73,14 +74,36 @@ export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
           });
         });
         setMessages(chatData);
+
+        if (messages.length >= 14) {
+          const first = querySnapshot;
+          const lastVisible = first.docs[first.docs.length - 1];
+          setLastStanpshot(lastVisible);
+          setHasMore(true);
+        }
       });
 
+      const collRec = collection(db, "/users/", userChat.email, "chats");
       const notifyUserRef = doc(
         collection(db, "/users/", userChat.email, "chats"),
         user.email?.toString()
       );
-      updateDoc(notifyUserRef, { seen: false });
+      getDocs(collRec).then((doc) => {
+        const findChat = doc.docs.find(
+          (doc) => doc.id == user.email?.toString()
+        );
+        if (!findChat) {
+          setDoc(notifyUserRef, {
+            email: user?.email,
+            name: user?.displayName,
+            profileImage: user.photoURL,
+            lastUpdated: new Date().toString(),
+            seen: false,
+          });
+        }
+      });
 
+      updateDoc(notifyUserRef, { seen: false });
       setMessageText("");
     }
   };
