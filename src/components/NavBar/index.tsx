@@ -17,7 +17,7 @@ export const NavBar = ({ setToggleSideBar, user }: NavBarProps) => {
     router.push("/");
   };
   return (
-    <div className="fixed top-0 left-0 w-full flex items-center justify-between px-8 py-2 select-none">
+    <div className="fixed top-0 left-0 w-full flex items-center justify-between md:px-8 px-4 py-2 select-none">
       <div className="flex gap-x-2 items-center">
         <FontAwesomeIcon
           icon={faBars}
@@ -30,7 +30,7 @@ export const NavBar = ({ setToggleSideBar, user }: NavBarProps) => {
       </div>
       <div className="flex items-center gap-x-2">
         <div className="flex text-xs gap-x-2 items-center py-2.5 px-4 ">
-          <div className="dark:text-white/90 text-black/90 font-semibold">
+          <div className="dark:text-white/90 text-black/90 font-semibold whitespace-nowrap">
             {user?.displayName}
           </div>
           <div className="w-7 h-7 aspect-square rounded-full relative">
@@ -48,7 +48,7 @@ export const NavBar = ({ setToggleSideBar, user }: NavBarProps) => {
         cursor-pointer hover:dark:bg-[#fca311]/20 hover:bg-[#14213d]/20 rounded px-2 py-1 transition-all duration-300
         "
         >
-          <div className="whitespace-nowrap" onClick={signOut}>
+          <div className="whitespace-nowrap md:block hidden" onClick={signOut}>
             Sign out
           </div>
           <FontAwesomeIcon icon={faSignOut} className="w-4 h-4" />

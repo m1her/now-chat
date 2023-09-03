@@ -6,7 +6,7 @@ import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth, db } from "@/firebase-config";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { addDoc, collection, doc, setDoc } from "firebase/firestore";
+import { collection, doc, setDoc } from "firebase/firestore";
 
 const Login = () => {
   const [user] = useAuthState(auth);
