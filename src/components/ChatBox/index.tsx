@@ -31,7 +31,6 @@ type ChatBoxProps = {
 export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
   const [messageText, setMessageText] = useState("");
   const [lastStanpshot, setLastStanpshot] = useState<any>();
-  const [firstStanpshot, setFirstStanpshot] = useState<any>();
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [messages, setMessages] = useState<
     {

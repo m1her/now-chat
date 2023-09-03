@@ -5,7 +5,7 @@ import ChatsSearch, { SearchedUsersProps } from "@/components/ChatsSearch";
 import Filters from "@/components/Filters";
 import { NavBar } from "@/components/NavBar";
 import { auth, db } from "@/firebase-config";
-import { addDoc, collection, doc, getDocs, setDoc } from "firebase/firestore";
+import { collection, doc, getDocs, setDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 
