@@ -21,6 +21,7 @@ import { db } from "@/firebase-config";
 import { User } from "firebase/auth";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Spinner } from "../Spinner";
+import { setMessagesFunction } from "@/functions/setMessagesFunction";
 
 type ChatBoxProps = {
   userChat: SearchedUsersProps;
@@ -28,18 +29,18 @@ type ChatBoxProps = {
   user: User | null | undefined;
 };
 
+export type messagesType = {
+  id: string;
+  message: string;
+  sender: string | null;
+  time: string;
+}[];
+
 export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
   const [messageText, setMessageText] = useState("");
   const [lastStanpshot, setLastStanpshot] = useState<any>();
   const [hasMore, setHasMore] = useState<boolean>(true);
-  const [messages, setMessages] = useState<
-    {
-      id: string;
-      message: string;
-      sender: string | null;
-      time: string;
-    }[]
-  >([]);
+  const [messages, setMessages] = useState<messagesType>([]);
 
   const messageTextHandler = (e: {
     target: { value: React.SetStateAction<string> };
@@ -83,10 +84,7 @@ export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
       });
 
       const collRec = collection(db, "/users/", userChat.email, "chats");
-      const notifyUserRef = doc(
-        collection(db, "/users/", userChat.email, "chats"),
-        user.email?.toString()
-      );
+      const notifyUserRef = doc(collRec, user.email?.toString());
       getDocs(collRec).then((doc) => {
         const findChat = doc.docs.find(
           (doc) => doc.id == user.email?.toString()
@@ -106,6 +104,7 @@ export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
       setMessageText("");
     }
   };
+
   const EnterSendHandler = (e: { key: string }) => {
     if (e.key == "Enter") {
       sendHandler();
@@ -118,94 +117,41 @@ export const ChatBox = ({ userChat, chatId, user }: ChatBoxProps) => {
       const docRef = doc(collection(db, "/chats/"), chatId);
       const messagesCollectionRef = collection(docRef, "messages");
 
-      // Query the 'messages' subcollection to get the latest 10 documents
       const messagesQuery = query(
         messagesCollectionRef,
         orderBy("time", "desc"),
         limit(10)
       );
 
-      // Initialize an array to store the messages
-      const latestMessages: React.SetStateAction<
-        {
-          id: string;
-          message: string;
-          sender: string;
-          time: string;
-        }[]
-      > = [];
-
-      getDocs(messagesQuery)
-        .then((querySnapshot) => {
-          const first = querySnapshot;
-          querySnapshot.forEach((doc) => {
-            latestMessages.push({
-              id: doc.id,
-              message: doc.data().message,
-              sender: doc.data().sender,
-              time: doc.data().time,
-            });
-          });
-          if (first.empty) {
-            setHasMore(false);
-          } else {
-            setHasMore(true);
-            setMessages(latestMessages);
-            const lastVisible = first.docs[first.docs.length - 1];
-            setLastStanpshot(lastVisible);
-          }
-        })
-        .catch((error) => {
-          setHasMore(false);
-          console.error("Error getting documents:", error);
-        });
+      setMessagesFunction({
+        messagesQuery,
+        setHasMore,
+        setLastStanpshot,
+        setMessages,
+      });
     }
   }, [chatId]);
 
   const loadNextMessages = () => {
-    console.log("haai");
     const docRef = doc(collection(db, "/chats/"), chatId);
     const messagesCollectionRef = collection(docRef, "messages");
 
-    const next = query(
+    const messagesQuery = query(
       messagesCollectionRef,
       orderBy("time", "desc"),
       startAfter(lastStanpshot),
       limit(10)
     );
 
-    const latestMessages: React.SetStateAction<
-      {
-        id: string;
-        message: string;
-        sender: string;
-        time: string;
-      }[]
-    > = [];
-    getDocs(next)
-      .then((querySnapshot) => {
-        const next = querySnapshot;
-        querySnapshot.forEach((doc) => {
-          latestMessages.push({
-            id: doc.id,
-            message: doc.data().message,
-            sender: doc.data().sender,
-            time: doc.data().time,
-          });
-        });
-        if (next.empty) {
-          setHasMore(false);
-        } else {
-          setHasMore(true);
-          setMessages((prev) => [...prev, ...latestMessages]);
-          const lastVisible = next.docs[next.docs.length - 1];
-          setLastStanpshot(lastVisible);
-        }
-      })
-      .catch((error) => {
-        setHasMore(false);
-        console.error("Error getting documents:", error);
-      });
+    const next = true;
+    setMessagesFunction({
+      messagesQuery,
+      setHasMore,
+      setLastStanpshot,
+      setMessages,
+      next,
+    });
+
   };
 
   return (
